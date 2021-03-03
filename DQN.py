@@ -33,7 +33,7 @@ class Agent_DQN:
         # Replay memory
         self.minibatch_size = 32
         self.replay_memory_size = 1000000
-        self.start_train = 50000
+        self.start_train = 1000 # Modificado
         self.memory_replay = Buffer(self.replay_memory_size,self.minibatch_size)
 
         # Neural Network
