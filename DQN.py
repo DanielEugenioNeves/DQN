@@ -27,7 +27,7 @@ class Agent_DQN:
         self.init_exploration_rate = 1.0
         self.final_exploration_rate = .01
         self.exploration_rate = self.init_exploration_rate
-        self.final_exploration_frame = 9000000
+        self.final_exploration_frame = 100000 # Modificado
         self.rate = (self.init_exploration_rate/self.final_exploration_frame)*20
 
         # Replay memory
@@ -39,7 +39,7 @@ class Agent_DQN:
         # Neural Network
         self.q        = Mymodel(self.input_dims,self.num_actions)._build_model()
         self.q_target = Mymodel(self.input_dims,self.num_actions)._build_model()
-        self.target_update_frequency = 10000
+        self.target_update_frequency = 1000 # Modificado
         self.update_frequency        = 4
         self.history_lengh           = 4
         self.optimizer  = optimizers.RMSprop(learning_rate=.00025,rho=0.95,momentum=0.95,epsilon=0.01)

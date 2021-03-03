@@ -17,6 +17,7 @@ import signal
 
 from random import randrange
 
+import logger
 
 class Enviroment:
 
@@ -36,7 +37,7 @@ class Enviroment:
         self.num_actions = 0
 
         #
-        self.MAX_FRAMES = 10000001
+        self.MAX_FRAMES = 100_001 # Modificado
         self.loss = .0
 
         #
@@ -45,6 +46,9 @@ class Enviroment:
         
         self.head_file = True
         self.head_resume = True
+
+        logger.session('log/').__enter__()  # Modificado
+
     def set_hardware_to_train(self):
         gpus = tf.config.experimental.list_physical_devices('GPU')
         if gpus:
@@ -101,27 +105,52 @@ class Enviroment:
 
     def read_data(self):
         date = datetime.datetime.now().strftime('%x %X')
-        data = self.train_step,date,self.rom_name,self.method,\
-            self.flag_w,self.ale.getFrameNumber(),self.episode,\
-            self.ale.getEpisodeFrameNumber(),self.immediate_reward,\
-            self.agent.memory_replay.lenght(),self.loss,self.agent.exploration_rate
+        data = self.train_step, \
+               date, \
+               self.rom_name, \
+               self.method, \
+               self.ale.getFrameNumber(), \
+               self.episode, \
+               self.ale.getEpisodeFrameNumber(), \
+               self.episode_reward, \
+               self.total_reward, \
+               self.agent.memory_replay.lenght(), \
+               self.loss, \
+               self.agent.exploration_rate
         self.log_data.append(data)
 
     def write_log_train(self):
         
         # File
-        fieldnames = ['Train','date-time', 'rom', 'method', 'checkpoint', 'total_frame',
-                      'episodes', 'frames_episode','immediate_reward','buffer_len','loss','epsilon']
+        fieldnames = ['Train',
+                      'date-time',
+                      'rom',
+                      'method',
+                      'total_frame',
+                      'episodes',
+                      'frames_episode',
+                      'episode_reward',
+                      'total_reward',
+                      'buffer_len',
+                      'loss',
+                      'epsilon']
         file_path = self.folder_train + '/new_data_train_step_' + str(self.train_step) + '.csv'
-        
-        with open(file_path, 'a') as arquivo_csv:
-            f_in = csv.writer(arquivo_csv, delimiter=',', lineterminator='\n')
-            if self.head_file:
-                f_in.writerow(fieldnames)
-                self.head_file = False
-            for log in self.log_data:
-                f_in.writerow(log)
-            self.log_data.clear()
+
+        for log in self.log_data:                           #
+            for (field, data) in zip(fieldnames, log):      #
+                logger.logkv(field, data)                   #
+            logger.dumpkvs()                                #
+                                                            #
+        self.log_data.clear()                               # Modificado
+
+        # with open(file_path, 'a') as arquivo_csv:
+        #     f_in = csv.writer(arquivo_csv, delimiter=',', lineterminator='\n')
+        #     if self.head_file:
+        #         f_in.writerow(fieldnames)
+        #         self.head_file = False
+        #     for log in self.log_data:
+        #         f_in.writerow(log)
+        #     self.log_data.clear()
 
     def resume_episode(self):
 
@@ -210,34 +239,38 @@ class Enviroment:
     def save_checkpoints_of_train(self):
         self.checkpoint = self.flag_w
 
-        if self.ale.getFrameNumber() >= 5000000 and self.flag_w == 0:
+        if self.ale.getFrameNumber() % 100 == 0:
             self.agent.save_model_weights(self.folder_train, self.flag_w)
             print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 5000000
-        elif self.ale.getFrameNumber() >= 10000000 and self.flag_w == 5000000:
-            self.agent.save_model_weights(self.folder_train, self.flag_w)
-            print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 10000000
-        elif self.ale.getFrameNumber() >= 20000000 and self.flag_w == 10000000:
-            self.agent.save_model_weights(self.folder_train, self.flag_w)
-            print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 20000000
-        elif self.ale.getFrameNumber() >= 30000000 and self.flag_w == 20000000:
-            self.agent.save_model_weights(self.folder_train, self.flag_w)
-            print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 30000000
-        elif self.ale.getFrameNumber() >= 50000000 and self.flag_w == 30000000:
-            self.agent.save_model_weights(self.folder_train, self.flag_w)
-            print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 50000000
-        elif self.ale.getFrameNumber() >= 70000000 and self.flag_w == 50000000:
-            self.agent.save_model_weights(self.folder_train, self.flag_w)
-            print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 70000000
-        elif self.ale.getFrameNumber() >= 100000000 and self.flag_w == 70000000:
-            self.agent.save_model_weights(self.folder_train, self.flag_w)
-            print(" Save checkpoint of train : " + str(datetime.datetime.now()))
-            self.flag_w = 100000000
+
+        # if self.ale.getFrameNumber() >= 5000000 and self.flag_w == 0:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 5000000
+        # elif self.ale.getFrameNumber() >= 10000000 and self.flag_w == 5000000:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 10000000
+        # elif self.ale.getFrameNumber() >= 20000000 and self.flag_w == 10000000:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 20000000
+        # elif self.ale.getFrameNumber() >= 30000000 and self.flag_w == 20000000:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 30000000
+        # elif self.ale.getFrameNumber() >= 50000000 and self.flag_w == 30000000:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 50000000
+        # elif self.ale.getFrameNumber() >= 70000000 and self.flag_w == 50000000:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 70000000
+        # elif self.ale.getFrameNumber() >= 100000000 and self.flag_w == 70000000:
+        #     self.agent.save_model_weights(self.folder_train, self.flag_w)
+        #     print(" Save checkpoint of train : " + str(datetime.datetime.now()))
+        #     self.flag_w = 100000000
         
 
 
@@ -265,6 +298,7 @@ class Enviroment:
 
         # Preper the train for many and many frames ...
         self.episode = 0
+        self.total_reward = 0
         self.step_env = 0
 
         # Loss
@@ -320,6 +354,7 @@ class Enviroment:
 
             self.write_log_train()
             self.resume_episode()
+            self.total_reward += self.episode_reward
 
     
     def teste_skip_frame(self):
@@ -359,7 +394,7 @@ class Enviroment:
         # Define if you want train, evaluation or full evaluation
         self.mode = 'train'        
         # Define which one rom you can play ['space_invaders','beam_rider','breakout']
-        self.rom_name = 'space_invaders'
+        self.rom_name = 'asteroids'  # Modificado
         # Define the weights checkpoint of network Q  ['300000','500000','1000000','5000000'] (This numbers represent the amount of total frames)
         #self.checkpoint = '_last'
         # Define if you want see the screen when train or evaluation
