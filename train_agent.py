@@ -47,7 +47,10 @@ class Enviroment:
         self.head_file = True
         self.head_resume = True
 
-        logger.session('log/').__enter__()  # Modificado
+        logger.session('log/dqn-asteroids-test').__enter__()  # Modificado
+
+        self.log_count = 0  # Modificado
+        self.count = 0      # Modificado
 
     def set_hardware_to_train(self):
         gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -106,6 +109,8 @@ class Enviroment:
     def read_data(self):
         date = datetime.datetime.now().strftime('%x %X')
         data = self.train_step, \
+               self.log_count, \
+               self.count, \
                date, \
                self.rom_name, \
                self.method, \
@@ -123,6 +128,8 @@ class Enviroment:
         
         # File
         fieldnames = ['Train',
+                      'log_count',
+                      'iteration',
                       'date-time',
                       'rom',
                       'method',
@@ -134,7 +141,7 @@ class Enviroment:
                       'buffer_len',
                       'loss',
                       'epsilon']
-        file_path = self.folder_train + '/new_data_train_step_' + str(self.train_step) + '.csv'
+        #file_path = self.folder_train + '/new_data_train_step_' + str(self.train_step) + '.csv'
 
         for log in self.log_data:                           #
             for (field, data) in zip(fieldnames, log):      #
@@ -142,6 +149,7 @@ class Enviroment:
             logger.dumpkvs()                                #
                                                             #
         self.log_data.clear()                               # Modificado
+        self.log_count += 1
 
         # with open(file_path, 'a') as arquivo_csv:
         #     f_in = csv.writer(arquivo_csv, delimiter=',', lineterminator='\n')
@@ -172,6 +180,7 @@ class Enviroment:
                 f_in.writerow(fieldnames)
                 self.head_resume = False
             f_in.writerow(data)
+        self.write_log_train()
     
         
     def stack_states(self, action):
@@ -239,7 +248,7 @@ class Enviroment:
     def save_checkpoints_of_train(self):
         self.checkpoint = self.flag_w
 
-        if self.ale.getFrameNumber() % 100 == 0:
+        if self.ale.getFrameNumber() % 10 == 0:
             self.agent.save_model_weights(self.folder_train, self.flag_w)
             print(" Save checkpoint of train : " + str(datetime.datetime.now()))
 
@@ -309,6 +318,7 @@ class Enviroment:
             # Variables to manipulate loss in resume
             self.total_loss = .0
             self.count_step_loss = 0
+
             
             # Prepar game to start
             self.episode += 1
@@ -337,7 +347,7 @@ class Enviroment:
                         # for s in states:
                         #     self.show_image_of(s)
                         self.loss = float(self.agent.train_agent(minibatch, self.method))
-                        self.read_data()
+                        #self.read_data()
                         self.total_loss += self.loss
                         self.count_step_loss += 1
                         self.action_step = 0
@@ -351,6 +361,14 @@ class Enviroment:
                         print(" Copy Weights Q to Q' ")
                     
                     self.save_checkpoints_of_train()
+
+                self.read_data()
+
+
+                if self.count % 100 == 0:
+                    self.write_log_train()
+
+                self.count += 1
 
             self.write_log_train()
             self.resume_episode()
