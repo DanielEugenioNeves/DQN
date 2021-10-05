@@ -47,7 +47,7 @@ class Enviroment:
         self.head_file = True
         self.head_resume = True
 
-        logger.session('log/dqn-asteroids-test').__enter__()  # Modificado
+        logger.session(f'log/dqn-battle_zone-5').__enter__()  # Modificado
 
         self.log_count = 0  # Modificado
         self.count = 0      # Modificado
@@ -80,7 +80,7 @@ class Enviroment:
         self.ale.loadROM(str.encode(self.rom_path))
 
         # Game mode
-        self.ale.setMode(0)
+        # self.ale.setMode(0)
         self.ale.setDifficulty(0)
 
         # Get the list of legal actions
@@ -412,7 +412,7 @@ class Enviroment:
         # Define if you want train, evaluation or full evaluation
         self.mode = 'train'        
         # Define which one rom you can play ['space_invaders','beam_rider','breakout']
-        self.rom_name = 'asteroids'  # Modificado
+        self.rom_name = 'battle_zone'  # Modificado
         # Define the weights checkpoint of network Q  ['300000','500000','1000000','5000000'] (This numbers represent the amount of total frames)
         #self.checkpoint = '_last'
         # Define if you want see the screen when train or evaluation
